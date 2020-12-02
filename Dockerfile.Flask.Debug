@@ -1,0 +1,3 @@
+FROM registry.jetrabbits.com/flask
+
+CMD ["python3","run.py"]

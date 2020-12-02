@@ -1,0 +1,26 @@
+version: '3'
+services:
+  local-storage-db:
+    image: "registry.jetrabbits.com/postgres:pg_cron"
+    environment:
+      - POSTGRES_HOST=local-storage-db
+    env_file:
+      - .env
+    volumes:
+      - ./database/1_tables.sql:/docker-entrypoint-initdb.d/1_tables.sql
+      - ./database/2_views.sql:/docker-entrypoint-initdb.d/2_views.sql
+      - ./database/3_basedata.sql:/docker-entrypoint-initdb.d/3_basedata.sql
+  local-storage-api:
+    ports:
+      - "80:5000"
+    build:
+      context: .
+      dockerfile: Dockerfile.Flask.Debug
+    environment:
+      - POSTGRES_HOST=local-storage-db
+    env_file:
+      - .env
+    volumes:
+      - ./src:/opt/services/flaskapp/src
+    depends_on:
+      - local-storage-db

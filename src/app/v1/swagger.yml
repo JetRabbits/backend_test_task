@@ -1,0 +1,898 @@
+openapi: 3.0.2
+info:
+  description:  |
+  version: "0.1"
+  title: REST for local-storage
+  contact:
+    email: "hr@jetrabbits.com"
+paths:
+  /health:
+    get:
+      operationId: app.v1.general.health
+      tags:
+        - General
+      summary: Проверка доступности сервера
+      description:  |
+        Проверка доступности сервера
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetSuccess'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+  /version:
+    get:
+      operationId: app.v1.general.version
+      tags:
+        - General
+      summary: Версия серверного решения
+      description:  |
+        Версия серверного решения
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VersionResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+  /nodes:
+    get:
+      operationId: app.v1.nodes.get_nodes
+      tags:
+        - Nodes
+      summary: Получение всех узлов c сервера
+      description: >-
+        Получение всех узлов c сервера. Разрешено для ролей: Система
+      parameters:
+        - name: token
+          in: query
+          description: Токен со сроком действия 24 часа
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of nodes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodeResponseList'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        '403':
+          description: Permission denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PermissionDenied'
+        '404':
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceNotFound'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+  /nodes/search:
+    post:
+      operationId: app.v1.nodes.search
+      tags:
+        - Nodes
+      summary: Поиск узлов
+      description: >-
+        Поиск узлов. Разрешено для ролей: Система, Клиент, Психолог, Сотрудник, Доверенный Родственник, Родственник
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                token:
+                  type: string
+                  description: Токен со сроком действия 24 часа
+                preview_quality:
+                  type: string
+                  enum: [S, M, L]
+                  example: S
+                  description: "Размер миниатюры при возврате ссылок: S (15%), M (50%), L (65%)"
+                byIds:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: string
+                    format: uuid
+                  description: Поиск узлов по списку ID узлов
+                byOwnerIds:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: string
+                    format: uuid
+                  description: Поиск узлов по списку ID владельцев
+                byReaderIds:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: string
+                    format: uuid
+                  description: Поиск узлов по списку ID читателей
+                byWriterIds:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: string
+                    format: uuid
+                  description: Поиск узлов по списку ID писателей
+                byNodePaths:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: string
+                    minLength: 1
+                    maxLength: 200
+                    example: "/"
+                    description: "/00000000-0000-0000-0000-000000000000/00000000-0000-0000-0000-000000000000 ('/' - корневой узел)"
+                  description: "Поиск узлов по пути родительского узла"
+                byNodeNames:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: string
+                    minLength: 1
+                    maxLength: 200
+                    example: "День победы"
+                  description: "Поиск узлов по именам"
+                byNodeTypes:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: integer
+                    minimum: 1
+                    maximum: 5
+                    example: 2
+                    description: "Тип узла: 1 - directory, 2 - file, 3 - part-of-file, 4 - link; 5 - public-directory"
+                  description: "Поиск под-узлов по типу"
+                sortBy:
+                  type: array
+                  minItems: 1
+                  items:
+                    $ref: '#/components/schemas/SortCriteria'
+                  description: "Сортировка выбранных узлов по полям: name, modified_when, created_when"
+                offsetLimit:
+                  $ref: '#/components/schemas/OffSetLimit'
+              required:
+                - token
+        description: Узел
+        required: true
+      responses:
+        '200':
+          description: List of nodes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodeResponseList'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        '403':
+          description: Permission denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PermissionDenied'
+        '404':
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceNotFound'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+  '/nodes/{id}':
+    get:
+      operationId: app.v1.nodes.get_node_by_id
+      tags:
+        - Nodes
+      summary: Получение узла по id
+      description: 'Получение узла по id. Разрешено для ролей: Система, Клиент, Психолог, Сотрудник, Доверенный Родственник, Родственник'
+      parameters:
+        - name: id
+          in: path
+          description: UUID узла
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: token
+          in: query
+          description: Токен со сроком действия 24 часа
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodeResponseList'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        '403':
+          description: Permission denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PermissionDenied'
+        '404':
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceNotFound'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+    post:
+      operationId: app.v1.nodes.post_node
+      tags:
+        - Nodes
+      summary: Сохранение узла
+      description: >-
+        Сохранение узла. Разрешено для ролей: Система, Психолог, Сотрудник
+      parameters:
+        - name: id
+          in: path
+          description: UUID узла
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                token:
+                  type: string
+                nodes:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Node'
+              required:
+                - token
+                - nodes
+        description: Массив узлов
+        required: true
+      responses:
+        '200':
+          description: List of nodes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodeList'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        '403':
+          description: Permission denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PermissionDenied'
+        '404':
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceNotFound'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+    delete:
+      operationId: app.v1.nodes.delete_node
+      tags:
+        - Nodes
+      summary: Удаление узла
+      description: 'Удаление узла. Разрешено для ролей: Система'
+      parameters:
+        - name: id
+          in: path
+          description: UUID узла
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: token
+          in: query
+          description: Токен со сроком действия 24 часа
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RemoveSuccess'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        '403':
+          description: Permission denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PermissionDenied'
+        '404':
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceNotFound'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+  '/nodes/{id}/download':
+    get:
+      operationId: app.v1.nodes.download
+      tags:
+        - Nodes
+      summary: Скачивание узла
+      description: 'Скачивание узла. Разрешено для ролей: Система, Клиент, Психолог, Сотрудник, Доверенный Родственник, Родственник'
+      parameters:
+        - name: id
+          in: path
+          description: UUID узла
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Node
+          content:
+            multipart/form-data:
+              schema:
+                type: object
+                properties:
+                  file:
+                    type: string
+                    format: binary
+                    description: File
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        '403':
+          description: Permission denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PermissionDenied'
+        '404':
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceNotFound'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+  '/nodes/{id}/upload':
+    post:
+      operationId: app.v1.nodes.upload
+      tags:
+        - Nodes
+      summary: Загрузка узла (2 этап)
+      description: >-
+        Загрузка узла. Разрешено для ролей: Система, Психолог, Сотрудник
+      parameters:
+        - name: id
+          in: path
+          description: UUID узла
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: token
+          in: query
+          description: Токен со сроком действия 24 часа
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: File
+        description: Узел
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostSuccess'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        '403':
+          description: Permission denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PermissionDenied'
+        '404':
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceNotFound'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+servers:
+  - url: /rest/v1
+components:
+  schemas:
+    Setting:
+      type: object
+      properties:
+        key:
+          type: string
+          minLength: 3
+          maxLength: 100
+          description: Ключ настройки
+          example: key
+        value:
+          type: string
+          minLength: 3
+          maxLength: 1000
+          description: Значение настройки
+          example: value
+      required:
+        - key
+        - value
+    ResourceNotFound:
+      type: object
+      properties:
+        detail:
+          type: string
+          example: Resource not found
+          description: Описание ошибки (не обязательное поле для PROD окружения)
+        error_code:
+          type: string
+          default: STORAGE-0002
+          example: STORAGE-0002
+          description: Код ошибки для обработки на стороне клиента
+        status:
+          type: string
+          example: 404
+          description: HTTP CODE
+        title:
+          type: string
+          example: Resource not found
+          description: HTTP MESSAGE
+        type:
+          type: string
+          example: '/rest/v1/ui/#/<Entity>'
+          description: Путь до документации
+        instance:
+          type: string
+          example: /<entity>/00000000-0000-0000-0000-000000000000
+          description: Путь до обьекта внутри JSON
+        action:
+          type: string
+          example: insert
+          description: 'Действие, применяемое для обьекта: insert, remove'
+        version:
+          type: string
+          description: API version
+        host:
+          type: string
+          example: storage.jetrabbits.com
+          description: API host
+        returned:
+          type: string
+          example: "2020-02-03T08:00:00+0000"
+          description: "Время возврата ответа. ISO 8601: yyyy-MM-dd'T'HH:mm:ssZ (2020-03-26T23:59:59+0300) (https://tools.ietf.org/html/rfc3339#section-5.6)"
+    BadRequest:
+      type: object
+      properties:
+        detail:
+          type: string
+          example: '<Entity> is not registered, id: 00000000-0000-0000-0000-000000000000'
+          description: Описание ошибки (не обязательное поле для PROD окружения)
+        error_code:
+          type: string
+          default: STORAGE-0004
+          example: STORAGE-0004
+          description: Код ошибки для обработки на стороне клиента
+        status:
+          type: string
+          example: 400
+          description: HTTP CODE
+        title:
+          type: string
+          example: Bad request
+          description: HTTP MESSAGE
+        version:
+          type: string
+          description: API version
+        host:
+          type: string
+          example: storage.jetrabbits.com
+          description: API host
+        returned:
+          type: string
+          example: "2020-02-03T08:00:00+0000"
+          description: "Время возврата ответа. ISO 8601: yyyy-MM-dd'T'HH:mm:ssZ (2020-03-26T23:59:59+0300) (https://tools.ietf.org/html/rfc3339#section-5.6)"
+    PermissionDenied:
+      type: object
+      properties:
+        detail:
+          type: string
+          example: Permission denied
+          description: Описание ошибки (не обязательное поле для PROD окружения)
+        error_code:
+          type: string
+          default: STORAGE-0009
+          example: STORAGE-0009
+          description: Код ошибки для обработки на стороне клиента
+        status:
+          type: string
+          example: 403
+          description: HTTP CODE
+        title:
+          type: string
+          example: Permission denied
+          description: HTTP MESSAGE
+        version:
+          type: string
+          description: API version
+        host:
+          type: string
+          example: storage.jetrabbits.com
+          description: API host
+        returned:
+          type: string
+          example: "2020-02-03T08:00:00+0000"
+          description: "Время возврата ответа. ISO 8601: yyyy-MM-dd'T'HH:mm:ssZ (2020-03-26T23:59:59+0300) (https://tools.ietf.org/html/rfc3339#section-5.6)"
+    InternalServerError:
+      type: object
+      properties:
+        detail:
+          type: string
+          example: Internal server error
+          description: Описание ошибки (не обязательное поле для PROD окружения)
+        error_code:
+          type: string
+          default: STORAGE-0001
+          example: STORAGE-0001
+          description: Код ошибки для обработки на стороне клиента
+        status:
+          type: string
+          example: 500
+          description: HTTP CODE
+        title:
+          type: string
+          example: Internal server error
+          description: HTTP MESSAGE
+        version:
+          type: string
+          description: API version
+        host:
+          type: string
+          example: storage.jetrabbits.com
+          description: API host
+        returned:
+          type: string
+          example: "2020-02-03T08:00:00+0000"
+          description: "Время возврата ответа. ISO 8601: yyyy-MM-dd'T'HH:mm:ssZ (2020-03-26T23:59:59+0300) (https://tools.ietf.org/html/rfc3339#section-5.6)"
+    VersionResponse:
+      type: object
+      properties:
+        version:
+          type: string
+          example: 0.1
+          description: API version
+    GetSuccess:
+      type: object
+      properties:
+        status:
+          type: string
+          example: 200
+          description: HTTP CODE
+        title:
+          type: string
+          example: Success
+          description: HTTP MESSAGE
+        version:
+          type: string
+          example: 0.6
+          description: API version
+        host:
+          type: string
+          example: storage.jetrabbits.com
+          description: API host
+        returned:
+          type: string
+          example: "2020-02-03T08:00:00+0000"
+          description: "Время возврата ответа. ISO 8601: yyyy-MM-dd'T'HH:mm:ssZ (2020-03-26T23:59:59+0300) (https://tools.ietf.org/html/rfc3339#section-5.6)"
+    PostSuccess:
+      type: object
+      properties:
+        detail:
+          type: string
+          example: POST /<Entity>
+          description: Информации о вызове
+        status:
+          type: string
+          example: 200
+          description: HTTP CODE
+        title:
+          type: string
+          example: Success
+          description: HTTP MESSAGE
+        type:
+          type: string
+          example: '/rest/v1/ui/#/<Entity>'
+          description: Путь до документации
+        version:
+          type: string
+          description: API version
+        host:
+          type: string
+          example: storage.jetrabbits.com
+          description: API host
+        returned:
+          type: string
+          example: "2020-02-03T08:00:00+0000"
+          description: "Время возврата ответа. ISO 8601: yyyy-MM-dd'T'HH:mm:ssZ (2020-03-26T23:59:59+0300) (https://tools.ietf.org/html/rfc3339#section-5.6)"
+        impacted_entities:
+          description: Массивы Сущностей
+          type: object
+    RemoveSuccess:
+      type: object
+      properties:
+        detail:
+          type: string
+          example: DELETE /<Entity>
+          description: Информации о вызове
+        status:
+          type: string
+          example: 200
+          description: HTTP CODE
+        title:
+          type: string
+          example: Success
+          description: HTTP MESSAGE
+        type:
+          type: string
+          example: '/rest/v1/ui/#/<Entity>'
+          description: Путь до документации
+        instance:
+          type: string
+          example: /<entity>/00000000-0000-0000-0000-000000000000
+          description: Путь до обьекта внутри JSON
+        action:
+          type: string
+          example: remove
+          description: 'Действие, применяемое для обьекта: insert, remove'
+        version:
+          type: string
+          description: API version
+        host:
+          type: string
+          example: storage.jetrabbits.com
+          description: API host
+        returned:
+          type: string
+          example: "2020-02-03T08:00:00+0000"
+          description: "Время возврата ответа. ISO 8601: yyyy-MM-dd'T'HH:mm:ssZ (2020-03-26T23:59:59+0300) (https://tools.ietf.org/html/rfc3339#section-5.6)"
+    Node:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 00000000-0000-0000-0000-000000000000
+          description: UUID узла
+        name:
+          type: string
+          example: IMG-47456.jpg
+          description: Название узла
+          maxLength: 100
+        node_type:
+          type: integer
+          minimum: 1
+          maximum: 5
+          example: 2
+          description: "Тип узла: 1 - directory, 2 - file, 3 - part-of-file, 4 - link; 5 - public-directory"
+        description:
+          type: string
+          example: Фото 47456 из папки Фрейда
+          description: Описание узла
+        parent_id:
+          type: string
+          format: uuid
+          example: 00000000-0000-0000-0000-000000000000
+          description: UUID родительского узла (если путь не известен)
+        provider_id:
+          type: integer
+          minimum: 1
+          maximum: 2
+          example: 2
+          description: "Провайдер узла: 1 - server (по умолчанию, если не указывать)"
+        owner_id:
+          type: string
+          format: uuid
+          example: 00000000-0000-0000-0000-000000000000
+          description: UUID владельца узла
+        created_by:
+          type: string
+          format: uuid
+          example: 00000000-0000-0000-0000-000000000000
+          description: UUID создателя узла
+        created_when:
+          type: string
+          format: date-time
+          example: "2020-02-03T08:00:00+0300"
+          description: "Время создания узла. ISO 8601: yyyy-MM-dd'T'HH:mm:ssZ (2020-03-26T23:59:59+0300)"
+        modified_by:
+          type: string
+          format: uuid
+          example: 00000000-0000-0000-0000-000000000000
+          description: UUID изменившего узел
+        modified_when:
+          type: string
+          format: date-time
+          example: "2020-02-03T08:00:00+0300"
+          description: "Время изменения узла. ISO 8601: yyyy-MM-dd'T'HH:mm:ssZ (2020-03-26T23:59:59+0300)"
+        readers:
+          type: array
+          items:
+            type: string
+            format: uuid
+            example: 00000000-0000-0000-0000-000000000000
+            description: UUID персоны
+        writers:
+          type: array
+          items:
+            type: string
+            format: uuid
+            example: 00000000-0000-0000-0000-000000000000
+            description: UUID персоны
+      required:
+        - name
+        - node_type
+    SortCriteria:
+      type: object
+      properties:
+        field:
+          type: string
+          enum: [created_when, modified_when, name]
+          example: modified_when
+          description: "Имя колонки для сортировки: created_when, modified_when, name"
+        type:
+          type: string
+          enum: [desc, asc]
+          example: desc
+          description: "desc - по убыванию; asc - по возрастанию"
+      required:
+        - field
+        - type
+    OffSetLimit:
+      type: object
+      properties:
+        offset:
+          type: integer
+          minimum: 0
+          example: 10
+          description: Позиция записи для выбора
+        limit:
+          type: integer
+          minimum: 1
+          example: 1
+          description: Количество записей для выбора
+      required:
+        - offset
+        - limit
+    NodeResponse:
+      allOf:
+        - $ref: '#/components/schemas/Node'
+        - type: object
+      properties:
+        parent_path:
+          type: string
+          example: /00000000-0000-0000-0000-000000000000/00000000-0000-0000-0000-000000000000
+          description: Полный путь до родительского узла
+        size_in_bytes:
+          type: integer
+          example: 1048576
+          description: Размер файла в байтах (не для директории и ссылки)
+        download_link:
+          type: string
+          description: Ссылка на узел
+        download_preview_link:
+          type: string
+          description: Ссылка на миниатюру для узла типа файл
+    NodeList:
+      type: object
+      properties:
+        nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Node'
+    NodeResponseList:
+      type: object
+      properties:
+        nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/NodeResponse'
