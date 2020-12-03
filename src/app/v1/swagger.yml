@@ -428,7 +428,7 @@ paths:
       operationId: app.v1.nodes.upload
       tags:
         - Nodes
-      summary: Загрузка узла (2 этап)
+      summary: Загрузка узла
       description: >-
         Загрузка узла. Разрешено для ролей: Система, Психолог, Сотрудник
       parameters:
