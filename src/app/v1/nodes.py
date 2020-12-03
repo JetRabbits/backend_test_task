@@ -35,7 +35,7 @@ def get_node_by_id(id, token):
 
 @auth_required('remove', '/rest/v1/nodes')
 def delete_node(id, token):
-    # TODO: Implement search functions
+    # TODO: Implement delete function
     return success('REMOVE /nodes', 200, 'Success', REST_GUIDE + 'nodes.post_nodes')
 
 
@@ -175,14 +175,6 @@ def post_node_users(session, clazz, body, users, user_key, node_id, node_instanc
         filter_by(node_id=node_id). \
         filter(getattr(clazz, user_key).notin_(new_users)). \
         delete(synchronize_session=False)
-
-
-def search_nodes_by_path(path):
-    node_rows = select(text(GET_NODE_IDS_BY_PATH), path=path + '%')
-    node_ids = []
-    for node_row in node_rows:
-        node_ids.append(node_row['id'])
-    return node_ids
 
 
 def get_node_path_by_id(id):

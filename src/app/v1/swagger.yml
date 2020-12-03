@@ -94,6 +94,60 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/InternalServerError'
+    post:
+      operationId: app.v1.nodes.post_nodes
+      tags:
+        - Nodes
+      summary: Создание или изменение узлов на сервере
+      description: >-
+        Создание или изменение узлов на сервере. Разрешено для ролей: Система, Сотрудник
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                token:
+                  type: string
+                nodes:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Node'
+              required:
+                - token
+                - nodes
+        description: Массив узлов
+        required: true
+      responses:
+        '200':
+          description: List of nodes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodeList'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        '403':
+          description: Permission denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PermissionDenied'
+        '404':
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceNotFound'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
   /nodes/search:
     post:
       operationId: app.v1.nodes.search
@@ -243,68 +297,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NodeResponseList'
-        '400':
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BadRequest'
-        '403':
-          description: Permission denied
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PermissionDenied'
-        '404':
-          description: Resource not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ResourceNotFound'
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InternalServerError'
-    post:
-      operationId: app.v1.nodes.post_node
-      tags:
-        - Nodes
-      summary: Сохранение узла
-      description: >-
-        Сохранение узла. Разрешено для ролей: Система, Психолог, Сотрудник
-      parameters:
-        - name: id
-          in: path
-          description: UUID узла
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        content:
-          application/json:
-            schema:
-              properties:
-                token:
-                  type: string
-                nodes:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/Node'
-              required:
-                - token
-                - nodes
-        description: Массив узлов
-        required: true
-      responses:
-        '200':
-          description: List of nodes
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/NodeList'
         '400':
           description: Bad request
           content:
