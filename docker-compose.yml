@@ -2,6 +2,7 @@ version: '3'
 services:
   local-storage-db:
     image: "registry.jetrabbits.com/postgres:pg_cron"
+    container_name: local-storage-db
     environment:
       - POSTGRES_HOST=local-storage-db
     env_file:
@@ -10,7 +11,9 @@ services:
       - ./database/1_tables.sql:/docker-entrypoint-initdb.d/1_tables.sql
       - ./database/2_views.sql:/docker-entrypoint-initdb.d/2_views.sql
       - ./database/3_basedata.sql:/docker-entrypoint-initdb.d/3_basedata.sql
+      - ./postgres-data:/var/lib/postgresql/data
   local-storage-api:
+    container_name: local-storage-api
     ports:
       - "80:5000"
     build:

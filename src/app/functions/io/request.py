@@ -2,7 +2,7 @@ import time
 
 from flask import request, g, make_response, render_template
 
-from app.functions import app, isDebugMode
+from app.functions import app, isDebugMode, isDebugRequestResponse
 from app.functions.base.date import now
 from app.functions.base.json import json_to_string, empty_json_object, to_json
 from app.functions.base.string import replace
@@ -92,7 +92,7 @@ def before_request():
 
 def run_debug_toolbar_for_json_if_needed(response):
     is_json = response.mimetype == "application/json"
-    if isDebugMode and is_json and response.status_code != 401 and request.method == 'GET':
+    if isDebugRequestResponse and is_json and response.status_code != 401 and request.method == 'GET':
         response.direct_passthrough = False
         args = dict(response=response.data.decode("utf-8"), http_code=response.status)
         html_wrapped_response = make_response(render_template("wrap_json.html", **args), response.status_code)

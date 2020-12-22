@@ -51,6 +51,10 @@ COPY public.nodes (id, node_type, provider_id, name, owner_id, created_by, creat
 194d39b4-136f-11eb-8307-0242ac120010	1	1	Масленица	00000000-0000-0000-0000-000000000000	6e44fb2e-2502-4b0c-b349-8eba55701cb9	2020-10-23 08:45:31+00
 \.
 
+COPY public.dual (dual) FROM stdin;
+0
+\.
+
 --
 -- base data
 --
