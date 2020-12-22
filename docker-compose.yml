@@ -25,5 +25,6 @@ services:
       - .env
     volumes:
       - ./src:/opt/services/flaskapp/src
+      - ./logs:/opt/services/flaskapp/src/logs
     depends_on:
       - local-storage-db
